@@ -1,5 +1,4 @@
-{{ if .Values.deployOLM }}
-{{ if not (eq .Values.olmNamespace .Release.Namespace) }}
+{{ if not (eq .Values.olmOperatorNamespace .Release.Namespace) }}
 ---
 apiVersion: v1
 kind: Namespace
@@ -16,4 +15,3 @@ kind: OperatorGroup
 metadata:
   name: global-operators
   namespace: {{ .Values.olmOperatorNamespace }}
-  {{ end }}
