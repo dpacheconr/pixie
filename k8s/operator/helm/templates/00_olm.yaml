@@ -1,11 +1,20 @@
-{{if .Values.deployOLM}}
+{{- $olmCRDFound := false }} 
+{{- $nsLookup := len (lookup "v1" "Namespace" "" "") }} 
+{{- range $index, $crdLookup := (lookup "apiextensions.k8s.io/v1" "CustomResourceDefinition" "" "").items -}}{{ if eq $crdLookup.metadata.name "operators.operators.coreos.com"}}{{ $olmCRDFound = true }}{{ end }}{{end}} 
+{{ if and (not $olmCRDFound) (not (eq $nsLookup 0))}}{{ fail "CRDs missing! Please deploy CRDs from https://github.com/pixie-io/pixie/tree/main/k8s/operator/helm/crds to continue with deploy." }}{{end}} 
+{{- $lookupLen := 0 -}}{{- $opLookup := (lookup "operators.coreos.com/v1" "OperatorGroup" "" "").items -}}{{if $opLookup }}{{ $lookupLen = len $opLookup }}{{ end }}
+{{ if (or (eq (.Values.deployOLM | toString) "true") (and (not (eq (.Values.deployOLM | toString) "false")) (eq $lookupLen 0))) }}
 {{ if not (eq .Values.olmNamespace .Release.Namespace) }}
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: {{ .Values.olmNamespace }}
-{{ end }}
+  {{- if .Values.annotations}}
+  annotations:
+  {{ .Values.annotations | toYaml | nindent 4 }}
+  {{- end }}
+  {{ end }}
 ---
 kind: ServiceAccount
 apiVersion: v1
@@ -94,23 +103,13 @@ spec:
               memory: 160Mi
       nodeSelector:
         kubernetes.io/os: linux
+        {{- if .Values.nodeselector }}
+          {{ .Values.nodeselector | toYaml | nindent 8 }}
+        {{- end}}
+      {{- with include "custom.tolerations" . }}
       tolerations:
-      - key: "kubernetes.io/arch"
-        operator: "Equal"
-        value: "amd64"
-        effect: "NoSchedule"
-      - key: "kubernetes.io/arch"
-        operator: "Equal"
-        value: "amd64"
-        effect: "NoExecute"
-      - key: "kubernetes.io/arch"
-        operator: "Equal"
-        value: "arm64"
-        effect: "NoSchedule"
-      - key: "kubernetes.io/arch"
-        operator: "Equal"
-        value: "arm64"
-        effect: "NoExecute"
+        {{- . | nindent 8 }}
+      {{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -167,23 +166,13 @@ spec:
               memory: 80Mi
       nodeSelector:
         kubernetes.io/os: linux
+        {{- if .Values.nodeselector }}
+          {{ .Values.nodeselector | toYaml | nindent 8 }}
+        {{- end}}
+      {{- with include "custom.tolerations" . }}
       tolerations:
-      - key: "kubernetes.io/arch"
-        operator: "Equal"
-        value: "amd64"
-        effect: "NoSchedule"
-      - key: "kubernetes.io/arch"
-        operator: "Equal"
-        value: "amd64"
-        effect: "NoExecute"
-      - key: "kubernetes.io/arch"
-        operator: "Equal"
-        value: "arm64"
-        effect: "NoSchedule"
-      - key: "kubernetes.io/arch"
-        operator: "Equal"
-        value: "arm64"
-        effect: "NoExecute"
+        {{- . | nindent 8 }}
+      {{- end }}
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1

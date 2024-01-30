@@ -18,20 +18,7 @@ spec:
     registryPoll:
       interval: 10m
   grpcPodConfig:
+    {{- with include "custom.tolerations" . }}
     tolerations:
-    - key: "kubernetes.io/arch"
-      operator: "Equal"
-      value: "amd64"
-      effect: "NoSchedule"
-    - key: "kubernetes.io/arch"
-      operator: "Equal"
-      value: "amd64"
-      effect: "NoExecute"
-    - key: "kubernetes.io/arch"
-      operator: "Equal"
-      value: "arm64"
-      effect: "NoSchedule"
-    - key: "kubernetes.io/arch"
-      operator: "Equal"
-      value: "arm64"
-      effect: "NoExecute"
+      {{- . | nindent 8 }}
+    {{- end }}

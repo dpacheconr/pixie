@@ -1,3 +1,36 @@
+annotations:
+  scheduler.alpha.kubernetes.io/defaultTolerations: '[{"operator": "Equal", "value": "spot", "key": "kubernetes.azure.com/scalesetpriority"},{"operator": "Equal", "value": "true", "key": "CriticalAddonsOnly"}]'
+
+tolerations:
+  - key: "kubernetes.io/arch"
+    operator: "Equal"
+    value: "amd64"
+    effect: "NoSchedule"
+  - key: "kubernetes.io/arch"
+    operator: "Equal"
+    value: "amd64"
+    effect: "NoExecute"
+  - key: "kubernetes.io/arch"
+    operator: "Equal"
+    value: "arm64"
+    effect: "NoSchedule"
+  - key: "kubernetes.io/arch"
+    operator: "Equal"
+    value: "arm64"
+    effect: "NoExecute"
+  - key: "kubernetes.azure.com/scalesetpriority"
+    operator: "Equal"
+    value: "spot"
+    effect: "NoSchedule"
+  - key: "CriticalAddonsOnly"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+    
+nodeselector: {}
+  # agentpool: userpool
+  
+enabled: true
 ## OLM configuration
 # OLM is used for deploying and ensuring the operator is up-to-date.
 # deployOLM indicates whether OLM should be deployed. This should only be
@@ -11,7 +44,7 @@ olmNamespace: "olm"
 # The namespace which olm operators should run in. If olm has already
 # been deployed to the cluster, this should be the namespace that the olm operators
 # are running in.
-olmOperatorNamespace: "px-operator"
+olmOperatorNamespace: "pixie"
 # The bundle channel which OLM should listen to for the Vizier operator bundles.
 # Should be "stable" for production-versions of the operator, and "test" for release candidates.
 olmBundleChannel: "stable"
@@ -26,7 +59,7 @@ olmCatalogSource:
 name: "pixie"
 # The name of the cluster that the Vizier is monitoring. If empty,
 # a random name will be generated.
-clusterName: ""
+clusterName: "testcluster"
 # The version of the Vizier instance deployed to the cluster. If empty,
 # the operator will automatically deploy the latest version.
 version: ""
@@ -68,8 +101,9 @@ pod:
   #   memory: 5Gi
   nodeSelector: {}
   tolerations: []
-# A set of custom patches to apply to the deployed Vizier resources.
-# The key should be the name of the resource to apply the patch to, and the value is the patch to apply.
-# Currently, only a JSON format is accepted, such as:
-# `{"spec": {"template": {"spec": { "tolerations": [{"key": "test", "operator": "Exists", "effect": "NoExecute" }]}}}}`
-patches: {}
+  # A set of custom patches to apply to the deployed Vizier resources.
+  # The key should be the name of the resource to apply the patch to, and the value is the patch to apply.
+  # Currently, only a JSON format is accepted, such as:
+  # `{"spec": {"template": {"spec": { "tolerations": [{"key": "test", "operator": "Exists", "effect": "NoExecute" }]}}}}`
+  patches:
+    vizier-pem: '{"spec": {"template": {"spec": { "tolerations": [{"key": "kubernetes.azure.com/scalesetpriority", "operator": "Equal", "effect": "NoSchedule" },{"key": "CriticalAddonsOnly", "operator": "Equal", "value": "true" }]}}}}'  
